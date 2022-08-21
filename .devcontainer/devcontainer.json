@@ -1,19 +1,17 @@
-// Check https://containers.dev/implementors/json_reference/ for more details.
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.0/containers/python-3-postgres
+// Update the VARIANT arg in docker-compose.yml to pick a Python version
 {
-	"name": "Node.js/TypeScript/Python3",
-	"build": {
-		"dockerfile": "Dockerfile",
-		// Update 'VARIANT' to pick a Node version: 18, 16, 14.
-		// Append -bullseye or -buster to pin to an OS version.
-		// Use -bullseye variants on local arm64/Apple Silicon.
-		"args": { "VARIANT": "16-bullseye" }
-	},
+	"name": "Python 3 & PostgreSQL",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspace",
 
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
 		"vscode": {
-            // Set *default* container specific settings.json values on container create.
+			// Set *default* container specific settings.json values on container create.
 			"settings": { 
 				"python.defaultInterpreterPath": "/usr/local/bin/python",
 				"python.linting.enabled": true,
@@ -26,28 +24,29 @@
 				"python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
 				"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
 				"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
-				"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint"
+				"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
+				"python.testing.pytestPath": "/usr/local/py-utils/bin/pytest"
 			},
+			
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
-				"dbaeumer.vscode-eslint",
-                "ms-python.python",
+				"ms-python.python",
 				"ms-python.vscode-pylance"
 			]
 		}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	// This can be used to network with other containers or the host.
+	"forwardPorts": [3000],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "bash .devcontainer/post-create.sh",
 
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "node",
+	"remoteUser": "vscode",
 	"features": {
 		"git": "latest",
-		"github-cli": "latest",
-		"sshd": "latest"
+		"github-cli": "latest"
 	}
 }
