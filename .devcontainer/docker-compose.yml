@@ -6,7 +6,7 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
       args:
-        VARIANT: 3-bullseye
+        VARIANT: 3.10-bullseye
         NODE_VERSION: "lts/*"
     volumes:
       - ..:/workspace:cached
