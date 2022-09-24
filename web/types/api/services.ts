@@ -1,12 +1,5 @@
-import { PostgresInterval } from '../dbTypes';
+export type { ServiceConfig } from '@/types/db/services';
 
-export type ServiceConfig = {
-  serviceId: number
-  checkInterval: PostgresInterval
-  scheduledRunLimit: number
-  scheduledRunsEnabled: boolean
-  scheduledRunInterval: PostgresInterval
-}
 
 export type ServiceForApi = {
   serviceId: number
@@ -17,11 +10,19 @@ export type ServiceForApi = {
   mangaUrlFormat: string
 }
 
-export type ServiceForAdmin = {
-  id: number,
+type ServiceForAdminCommon = {
+  id: number
   serviceName: string
   disabled: boolean
   url: string
-  lastCheck?: Date
-  nextUpdate?: Date
+}
+
+export type ServiceForAdmin = ServiceForAdminCommon & {
+  lastCheck?: Date | null
+  nextUpdate?: Date | null
+}
+
+export type ServiceForAdminSerialized = ServiceForAdminCommon & {
+  lastCheck?: string | null
+  nextUpdate?: string | null
 }

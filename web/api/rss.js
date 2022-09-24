@@ -1,13 +1,13 @@
 import RSS from 'rss';
-import { getLatestReleases } from '../db/db.js';
+import { getLatestReleases } from '@/db/db';
 
 function createFeed(rows) {
   const feed = new RSS({
     title: 'Manga releases',
     description: 'Latest manga releases',
     id: 'manga-tracker-rss',
-    link: 'https://manga-tracker-rss.herokuapp.com',
-    feed_url: 'https://manga-tracker-rss.herokuapp.com/rss',
+    link: process.env.BASE_URL,
+    feed_url: `${process.env.BASE_URL}/rss`,
     custom_namespaces: {
       manga: 'test',
     },
@@ -39,14 +39,14 @@ export default app => {
   app.get('/rss/:user?', (req, res) => {
     const uuid = req.params.user;
     if (uuid && uuid.length !== 32) {
-      res.status(404).send('404');
+      res.sendStatus(404);
       return;
     }
 
     getLatestReleases(req.query.serviceId, req.query.mangaId, uuid)
       .then(rows => {
         if (rows.length === 0) {
-          res.status(404).send('404');
+          res.sendStatus(404);
           return;
         }
 

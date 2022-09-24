@@ -10,7 +10,7 @@ import pinoHttp from 'pino-http';
 import cookieParser from 'cookie-parser';
 
 import { csrfMissing, isDev, isTest } from './utils/constants.js';
-import { db } from './db';
+import { db } from './db/helpers';
 import PostgresStore from './db/session-store';
 import {
   authenticate,
@@ -18,7 +18,7 @@ import {
   createRememberMeToken,
   requiresUser,
   setUserOnLogin,
-} from './db/auth.js';
+} from './db/auth';
 import { bruteforce, rateLimiter } from './utils/ratelimits.js';
 import { expressLogger, logger, sessionLogger } from './utils/logging.js';
 
@@ -34,6 +34,7 @@ import {
   settingsApi,
   userApi,
 } from './api/index.js';
+import type { User } from '@/types/db/user';
 
 passport.use(
   new JsonStrategy(
@@ -57,7 +58,7 @@ passport.deserializeUser((user, done) => {
 });
 
 // Turn off when not using this app with a reverse proxy like heroku
-const reverseProxy = !isDev;
+const reverseProxy = !!process.env.TRUST_PROXY;
 if (!isDev && !process.env.SESSION_SECRET) throw new Error('No session secret given');
 
 const nextApp = next_({ dev: isDev });
@@ -84,7 +85,7 @@ export default nextApp.prepare()
       crossOriginEmbedderPolicy: false,
       hsts: !isDev,
     }));
-    if (reverseProxy) server.enable('trust-proxy');
+    if (reverseProxy) server.set('trust proxy', process.env.TRUST_PROXY);
 
     const store = new PostgresStore({
       conn: db,
@@ -127,7 +128,16 @@ export default nextApp.prepare()
 
     server.use((req, res, next) => {
       logger.debug('Auth cookie: %s', req.cookies.auth);
-      logger.debug('%s %s', req.method, req.originalUrl);
+
+      res.on('finish', () => {
+        expressLogger.info('%s %s %s %s  User Agent: %s',
+          res.statusCode,
+          req.method,
+          req.ip,
+          req.originalUrl,
+          req.headers['user-agent']);
+      });
+
       // if (!req.originalUrl.startsWith('/_next/static')) debug(req.originalUrl);
       next();
     });
@@ -137,7 +147,8 @@ export default nextApp.prepare()
       passport.authenticate('json'),
       (req, res) => {
         if (req.body.rememberme === true) {
-          createRememberMeToken(req, req.user)
+          // The user field is set by passport instead of express session here
+          createRememberMeToken(req, req.user as any as User)
             .then(token => {
               res.cookie('auth', token, {
                 maxAge: 2592000000, // 30d in ms
@@ -152,7 +163,7 @@ export default nextApp.prepare()
               res.sendStatus(500);
             });
         } else {
-          setUserOnLogin(req, req.user);
+          setUserOnLogin(req, req.user as any as User);
           res.redirect('/');
         }
       });
@@ -198,7 +209,6 @@ export default nextApp.prepare()
     });
 
     server.get('*', (req, res) => handle(req, res));
-
 
     // Error handlers
     server.use((err: any, req: express.Request, res: express.Response, next: NextFunction) => {
