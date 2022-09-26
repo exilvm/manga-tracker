@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        VARIANT: 3.10-bullseye
+        NODE_VERSION: "lts/*"
+    volumes:
+      - ..:/workspace:cached
+    environment:
+      DB_HOST: localhost
+      DB_NAME: postgres
+      DB_NAME_TEST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      PGPASSWORD: postgres
+      DB_PORT: 5432
+      DEBUG: manga-tracker:*
+      TS_NODE_PROJECT: tsconfig.server.json
+      TS_NODE_FILES: true
+      ELASTIC_NODE: http://localhost:9200
+      BASE_URL: http://localhost:3000/api
+    command: sleep infinity
+    network_mode: service:db
+  db:
+    image: postgres:12
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+volumes:
+  postgres-data:
